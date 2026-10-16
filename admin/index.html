@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blog Admin | JobsFor15YearOlds</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#14213d">
+<style>
+:root{
+  --ink:#14213d;--ink-soft:#3d4a66;--muted:#6b7590;--bg:#fbfaf6;--surface:#fff;--line:#e6e3d8;
+  --accent:#ff7a1a;--accent-soft:#fff1e5;--lime:#c8f169;--teal:#0f8b8d;--teal-soft:#e2f4f3;
+  --red:#d6453d;--red-soft:#fdeceb;--violet:#6a4cff;--violet-soft:#eeeaff;
+  --shadow:0 1px 2px rgba(20,33,61,.06),0 8px 24px rgba(20,33,61,.07);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--teal)}
+h1,h2,h3{margin:0 0 .5em;line-height:1.2}
+button,input,select,textarea{font:inherit;color:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer;text-decoration:none;color:var(--ink);white-space:nowrap}
+.btn:hover{border-color:#cfcabb}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#f06a08;border-color:#f06a08}
+.btn-dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn-danger{color:var(--red)}
+.btn-danger:hover{background:var(--red-soft);border-color:var(--red)}
+.btn-sm{padding:6px 10px;font-size:.85rem;border-radius:8px}
+label{display:block;font-weight:600;font-size:.88rem;margin-bottom:5px}
+.hint{font-weight:400;color:var(--muted);font-size:.8rem}
+.field{margin-bottom:14px}
+.input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 12px}
+.input:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:-1px;border-color:var(--teal)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.row{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+
+/* Top bar */
+.top{background:var(--ink);color:#fff}
+.top .in{max-width:1320px;margin:0 auto;padding:0 16px;height:60px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;color:#fff;text-decoration:none}
+.logo-badge{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--lime);color:var(--ink);font-size:.95rem}
+.top .repo{color:#b9c0d4;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top .sp{flex:1}
+.top .btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff}
+
+/* Login */
+.login{max-width:520px;margin:48px auto;padding:28px}
+.login ol{padding-left:1.2em;color:var(--ink-soft);font-size:.92rem}
+.login ol li{margin-bottom:4px}
+.check{display:flex;gap:8px;align-items:center;font-weight:500;font-size:.9rem}
+.err{background:var(--red-soft);color:#8f2a24;border-radius:10px;padding:10px 12px;font-size:.9rem;margin-bottom:12px}
+
+/* App layout */
+.app{max-width:1320px;margin:0 auto;padding:16px;display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media (max-width:960px){.app{grid-template-columns:1fr}}
+.side{padding:14px;position:sticky;top:12px}
+@media (max-width:960px){.side{position:static}}
+.today{border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.today.ok{background:var(--teal-soft)}
+.today.todo{background:var(--accent-soft)}
+.today b{display:block;font-size:1rem}
+.today small{color:var(--ink-soft)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+.stat b{display:block;font-size:1.25rem}
+.stat span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.list{list-style:none;margin:10px 0 0;padding:0;max-height:calc(100vh - 360px);min-height:120px;overflow:auto}
+@media (max-width:960px){.list{max-height:320px}}
+.list li button{width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:9px 10px;cursor:pointer;display:block}
+.list li button:hover{background:var(--bg)}
+.list li button[aria-current="true"]{background:var(--violet-soft)}
+.list .t{display:block;font-weight:600;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list .m{display:flex;gap:6px;align-items:center;font-size:.78rem;color:var(--muted)}
+.badge{display:inline-block;border-radius:6px;padding:1px 7px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.badge.live{background:var(--teal-soft);color:#0a6466}
+.badge.sched{background:var(--violet-soft);color:#4a33c0}
+.muted{color:var(--muted)}
+
+.editor{padding:18px}
+.ed-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.ed-head h2{margin:0;font-size:1.2rem;flex:1;min-width:180px}
+.counter{float:right;font-weight:500;font-size:.78rem;color:var(--muted)}
+.counter.warn{color:#b04a00}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:0}
+.tabs button{border:0;background:none;padding:8px 12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px;border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0;background:var(--bg);margin-top:10px}
+.toolbar button{border:1px solid transparent;background:none;border-radius:7px;padding:4px 9px;cursor:pointer;font-weight:600;font-size:.85rem}
+.toolbar button:hover{background:var(--surface);border-color:var(--line)}
+textarea.content{display:block;width:100%;min-height:440px;border:1px solid var(--line);border-radius:0 0 10px 10px;padding:14px;font:14.5px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical;background:var(--surface)}
+.preview{border:1px solid var(--line);border-radius:10px;margin-top:10px;padding:20px 24px;min-height:440px;background:var(--surface)}
+.preview .ph{color:var(--muted)}
+.preview h1.pt{font-size:1.9rem}
+.prose{font-size:1.02rem;line-height:1.75}
+.prose h2{font-size:1.5rem;margin:1.4em 0 .5em}
+.prose h3{font-size:1.2rem;margin:1.3em 0 .4em}
+.prose ul,.prose ol{padding-left:1.4em}
+.prose blockquote{margin:1.2em 0;padding:12px 16px;background:var(--teal-soft);border-left:4px solid var(--teal);border-radius:0 12px 12px 0}
+.prose blockquote p:last-child{margin:0}
+.prose img{max-width:100%;border-radius:12px;display:block;margin:1em auto}
+.prose code{background:var(--line);padding:2px 5px;border-radius:5px}
+.prose pre{background:var(--ink);color:#e9edf7;padding:14px;border-radius:10px;overflow:auto}
+.prose pre code{background:none;padding:0}
+.prose table{width:100%;border-collapse:collapse}
+.prose th,.prose td{border:1px solid var(--line);padding:7px 9px;text-align:left}
+.prose th{background:var(--accent-soft)}
+.cover-row{display:flex;gap:8px}
+.cover-row .input{flex:1}
+.cover-thumb{margin-top:8px;max-height:140px;border-radius:10px;border:1px solid var(--line)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.actions .sp{flex:1}
+.status{margin-top:12px;border-radius:10px;padding:10px 12px;font-size:.9rem}
+.status.info{background:var(--violet-soft)}
+.status.ok{background:var(--teal-soft)}
+.status.bad{background:var(--red-soft);color:#8f2a24}
+.guide{font-size:.85rem;color:var(--ink-soft);margin-top:10px}
+.guide summary{cursor:pointer;font-weight:600}
+.guide code{background:var(--line);padding:1px 5px;border-radius:5px}
+
+dialog{border:0;border-radius:16px;padding:0;width:min(520px,calc(100% - 32px));box-shadow:0 30px 80px rgba(20,33,61,.35)}
+dialog::backdrop{background:rgba(20,33,61,.5)}
+dialog form{padding:22px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="in">
+    <a class="logo" href="../blog/"><span class="logo-badge">15</span>Blog Admin</a>
+    <span class="repo" id="repo-label"></span>
+    <span class="sp"></span>
+    <a class="btn btn-sm" href="../blog/" target="_blank" rel="noopener">View blog</a>
+    <button class="btn btn-sm" id="settings-btn" hidden>Settings</button>
+    <button class="btn btn-sm" id="logout-btn" hidden>Log out</button>
+  </div>
+</header>
+
+<!-- ============ LOGIN ============ -->
+<section class="login card" id="login" hidden>
+  <h1>Sign in to publish</h1>
+  <p class="muted">Posts are saved straight to your GitHub repository, so you sign in with a GitHub access token. Your site redeploys automatically after each publish.</p>
+  <div class="err" id="login-err" hidden></div>
+  <form id="login-form">
+    <div class="row">
+      <div class="field"><label for="l-owner">GitHub owner</label><input class="input" id="l-owner" required></div>
+      <div class="field"><label for="l-repo">Repository</label><input class="input" id="l-repo" required></div>
+    </div>
+    <div class="field">
+      <label for="l-token">Access token</label>
+      <input class="input" id="l-token" type="password" autocomplete="off" required placeholder="github_pat_...">
+    </div>
+    <label class="check"><input type="checkbox" id="l-remember"> Keep me signed in on this device</label>
+    <p style="margin-top:16px"><button class="btn btn-primary" type="submit" id="login-submit">Sign in</button></p>
+  </form>
+  <details class="guide" open>
+    <summary>How to get a token (one time, 2 minutes)</summary>
+    <ol>
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained tokens → Generate new token</a>.</li>
+      <li>Name it <code>Blog admin</code> and pick an expiration (for example 1 year).</li>
+      <li>Under <b>Repository access</b>, choose <b>Only select repositories</b> and pick this site's repository.</li>
+      <li>Under <b>Permissions → Repository permissions</b>, set <b>Contents</b> to <b>Read and write</b>.</li>
+      <li>Click <b>Generate token</b>, copy it, and paste it above. Keep it private like a password.</li>
+    </ol>
+  </details>
+</section>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app" hidden>
+  <aside class="side card">
+    <div class="today" id="today"></div>
+    <div class="stats">
+      <div class="stat"><b id="s-live">0</b><span>Live</span></div>
+      <div class="stat"><b id="s-sched">0</b><span>Scheduled</span></div>
+      <div class="stat"><b id="s-streak">0</b><span>Day streak</span></div>
+    </div>
+    <button class="btn btn-primary" id="new-btn" style="width:100%">+ New post</button>
+    <input class="input" id="list-search" type="search" placeholder="Search posts" style="margin-top:10px" aria-label="Search posts">
+    <ul class="list" id="list"></ul>
+  </aside>
+
+  <section class="editor card">
+    <div class="ed-head">
+      <h2 id="ed-title">New post</h2>
+      <a class="btn btn-sm" id="view-live" target="_blank" rel="noopener" hidden>View live ↗</a>
+    </div>
+
+    <div class="field">
+      <label for="f-title">Title <span class="counter" id="c-title"></span></label>
+      <input class="input" id="f-title" maxlength="120" placeholder="e.g. 10 Easy Summer Jobs for 15-Year-Olds">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="f-slug">URL slug <span class="hint">/blog/<span id="slug-preview">your-post</span>/</span></label>
+        <input class="input" id="f-slug" placeholder="auto from title">
+      </div>
+      <div class="field">
+        <label for="f-category">Category</label>
+        <input class="input" id="f-category" list="cat-list" placeholder="e.g. Job Tips">
+        <datalist id="cat-list"></datalist>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-desc">Meta description <span class="hint">(shown in Google and on the blog card)</span> <span class="counter" id="c-desc"></span></label>
+      <textarea class="input" id="f-desc" rows="2" maxlength="300" placeholder="One or two sentences, ideally 120 to 160 characters."></textarea>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="f-date">Publish date <span class="hint">(future date = scheduled)</span></label>
+        <input class="input" id="f-date" type="date">
+      </div>
+      <div class="field">
+        <label for="f-cover">Cover image <span class="hint">(optional)</span></label>
+        <div class="cover-row">
+          <input class="input" id="f-cover" placeholder="Upload or paste an image URL">
+          <button class="btn btn-sm" type="button" id="cover-upload">Upload</button>
+        </div>
+        <img class="cover-thumb" id="cover-thumb" alt="" hidden>
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-coveralt">Cover image description <span class="hint">(alt text, helps SEO and accessibility)</span></label>
+      <input class="input" id="f-coveralt" placeholder="e.g. Teen working at an ice cream shop counter">
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="write" type="button">Write</button>
+      <button role="tab" aria-selected="false" data-tab="preview" type="button">Preview</button>
+      <span class="muted" style="margin-left:auto;font-size:.8rem;align-self:center" id="wordcount"></span>
+    </div>
+    <div id="write-pane">
+      <div class="toolbar" aria-label="Formatting">
+        <button type="button" data-md="h2" title="Heading">H2</button>
+        <button type="button" data-md="h3" title="Subheading">H3</button>
+        <button type="button" data-md="b" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button type="button" data-md="i" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button type="button" data-md="link" title="Link (Ctrl+K)">Link</button>
+        <button type="button" data-md="ul" title="Bullet list">• List</button>
+        <button type="button" data-md="ol" title="Numbered list">1. List</button>
+        <button type="button" data-md="quote" title="Tip box">Tip box</button>
+        <button type="button" data-md="table" title="Table">Table</button>
+        <button type="button" data-md="hr" title="Divider">―</button>
+        <button type="button" data-md="img" title="Upload image">Image</button>
+      </div>
+      <textarea class="content" id="f-content" spellcheck="true" placeholder="Write your post here...
+
+## Use H2 for main sections
+
+Normal paragraphs are just text. Use **bold**, *italic* and [links](https://example.com).
+
+- Bullet point
+- Another one
+
+> Tip boxes start with a &gt; sign."></textarea>
+    </div>
+    <div class="preview" id="preview" hidden></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="publish-btn" type="button">Publish now</button>
+      <button class="btn" id="reset-btn" type="button">Discard changes</button>
+      <span class="sp"></span>
+      <button class="btn btn-danger" id="delete-btn" type="button" hidden>Delete post</button>
+    </div>
+    <div class="status" id="status" hidden></div>
+    <details class="guide">
+      <summary>Formatting cheat sheet</summary>
+      <p><code>## Heading</code> · <code>### Subheading</code> · <code>**bold**</code> · <code>*italic*</code> · <code>[text](https://link)</code> · <code>- bullet</code> · <code>1. numbered</code> · <code>&gt; tip box</code> · <code>![description](image-url)</code> · <code>---</code> divider · tables: <code>| A | B |</code> then <code>|---|---|</code> then rows.</p>
+      <p>Drafts are auto-saved in this browser while you type, so a closed tab won't lose your work.</p>
+    </details>
+  </section>
+</div>
+
+<input type="file" id="file-input" accept="image/*" hidden>
+
+<dialog id="settings">
+  <form method="dialog" id="settings-form">
+    <h2>Settings</h2>
+    <div class="field"><label for="s-branch">Branch your site publishes from</label><input class="input" id="s-branch"></div>
+    <div class="field"><label for="s-site">Live site address <span class="hint">(used for Google links and sitemap)</span></label><input class="input" id="s-site" placeholder="https://www.example.com/"></div>
+    <p class="guide">Changed the post design in <code>blog/_template.html</code>? Rebuild every post page with it:</p>
+    <p><button class="btn" type="button" id="rebuild-btn">Rebuild all posts</button></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn btn-primary" value="save" id="settings-save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function(){
+'use strict';
+
+/* ------------------------------------------------------------------
+   Config & state
+------------------------------------------------------------------ */
+var DEFAULTS={owner:'shizaadsenseexpert',repo:'jobsfor15yearsold'};
+var CATS=['Job Tips','Interview Help','Resume Tips','Work Laws','Money & Pay','Summer Jobs','Online Jobs','Career Ideas'];
+var DRAFT_KEY='blogAdminDraft',CFG_KEY='blogAdminConfig',TOKEN_KEY='blogAdminToken';
+
+var cfg=load(CFG_KEY)||{};
+var token=null;
+var posts=[];          // contents of blog/posts.json
+var editing=null;      // slug of the post being edited (null = new post)
+var loaded=null;       // snapshot of the form when loaded, to detect unsaved changes
+var localImages={};    // uploaded image path -> object URL, for previews before the site redeploys
+
+function $(id){return document.getElementById(id)}
+function load(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function drop(k){try{localStorage.removeItem(k);sessionStorage.removeItem(k)}catch(e){}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function pad(n){return ('0'+n).slice(-2)}
+function today(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function addDays(iso,n){var d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function human(iso){return new Date(iso+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}
+function slugify(s){return String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/&/g,' and ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80).replace(/-+$/,'')}
+function siteUrl(){var u=cfg.siteUrl||'';return u&&!/\/$/.test(u)?u+'/':u}
+function isAbs(u){return /^(https?:)?\/\//i.test(u)}
+function fill(tpl,map){Object.keys(map).forEach(function(k){tpl=tpl.split('{{'+k+'}}').join(map[k])});return tpl}
+
+/* ------------------------------------------------------------------
+   Markdown -> HTML (small, safe subset; all raw HTML is escaped)
+------------------------------------------------------------------ */
+function safeUrl(u,base){
+  u=u.trim();
+  if(/^(https?:\/\/|mailto:|#|\/)/i.test(u))return u;
+  if(/^[a-z][a-z0-9+.-]*:/i.test(u))return '#';      // blocks javascript: and other schemes
+  return (base||'')+u;
+}
+function inline(text,base){
+  var codes=[];
+  var s=esc(text).replace(/`([^`]+)`/g,function(_,c){codes.push('<code>'+c+'</code>');return '\u0000'+(codes.length-1)+'\u0000'});
+  s=s.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g,function(_,alt,u,t){
+    return '<img src="'+safeUrl(u,base)+'" alt="'+alt+'"'+(t?' title="'+t+'"':'')+' loading="lazy">';
+  });
+  s=s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,function(_,t,u){
+    var href=safeUrl(u,base),ext=/^https?:\/\//i.test(href);
+    return '<a href="'+href+'"'+(ext?' target="_blank" rel="noopener"':'')+'>'+t+'</a>';
+  });
+  s=s.replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/(^|[^*\w])\*([^*\n]+?)\*(?!\w)/g,'$1<em>$2</em>');
+  s=s.replace(/(^|\W)_([^_\n]+?)_(?!\w)/g,'$1<em>$2</em>');
+  return s.replace(/\u0000(\d+)\u0000/g,function(_,i){return codes[+i]});
+}
+function headingId(t){return slugify(t.replace(/[*_`\[\]]/g,'').replace(/\]\([^)]*\)/g,''))}
+function md(src,base){
+  var lines=String(src||'').replace(/\r\n?/g,'\n').split('\n'),out=[],i=0;
+  var isUl=/^\s*[-*+]\s+/,isOl=/^\s*\d+[.)]\s+/,isTableSep=/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/;
+  function blockStart(l,next){return /^```/.test(l)||/^#{1,6}\s/.test(l)||/^>/.test(l)||isUl.test(l)||isOl.test(l)||/^(-{3,}|\*{3,}|_{3,})\s*$/.test(l)||(/^\s*\|/.test(l)&&next!=null&&isTableSep.test(next))}
+  function cells(l){return l.trim().replace(/^\||\|$/g,'').split('|').map(function(c){return c.trim()})}
+  while(i<lines.length){
+    var l=lines[i];
+    if(!l.trim()){i++;continue}
+    var m;
+    if(/^```/.test(l)){
+      var code=[];i++;
+      while(i<lines.length&&!/^```/.test(lines[i]))code.push(lines[i++]);
+      i++;out.push('<pre><code>'+esc(code.join('\n'))+'</code></pre>');continue;
+    }
+    if((m=l.match(/^(#{1,6})\s+(.*?)\s*#*\s*$/))){
+      var lv=Math.min(Math.max(m[1].length,2),4);     // the page title is the only H1
+      out.push('<h'+lv+' id="'+headingId(m[2])+'">'+inline(m[2],base)+'</h'+lv+'>');i++;continue;
+    }
+    if(/^(-{3,}|\*{3,}|_{3,})\s*$/.test(l)){out.push('<hr>');i++;continue}
+    if(/^>/.test(l)){
+      var q=[];while(i<lines.length&&/^>/.test(lines[i]))q.push(lines[i++].replace(/^>\s?/,''));
+      out.push('<blockquote>'+md(q.join('\n'),base)+'</blockquote>');continue;
+    }
+    if(isUl.test(l)||isOl.test(l)){
+      var ordered=isOl.test(l),re=ordered?isOl:isUl,items=[];
+      while(i<lines.length){
+        if(re.test(lines[i])){items.push(lines[i].replace(re,''));i++}
+        else if(lines[i].trim()&&/^\s{2,}/.test(lines[i])&&items.length){items[items.length-1]+=' '+lines[i].trim();i++}
+        else break;
+      }
+      var tag=ordered?'ol':'ul';
+      out.push('<'+tag+'>'+items.map(function(t){return '<li>'+inline(t,base)+'</li>'}).join('')+'</'+tag+'>');continue;
+    }
+    if(/^\s*\|/.test(l)&&i+1<lines.length&&isTableSep.test(lines[i+1])){
+      var head=cells(l);i+=2;var rows=[];
+      while(i<lines.length&&/^\s*\|/.test(lines[i]))rows.push(cells(lines[i++]));
+      out.push('<div style="overflow-x:auto"><table><thead><tr>'+head.map(function(c){return '<th>'+inline(c,base)+'</th>'}).join('')+'</tr></thead><tbody>'+
+        rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+inline(c,base)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>');
+      continue;
+    }
+    var para=[l];i++;
+    while(i<lines.length&&lines[i].trim()&&!blockStart(lines[i],lines[i+1]))para.push(lines[i++]);
+    out.push('<p>'+para.map(function(p){return inline(p,base)}).join('<br>\n')+'</p>');
+  }
+  return out.join('\n');
+}
+function readMins(text){var w=String(text).replace(/[#>*_`|\-\[\]()!]/g,' ').split(/\s+/).filter(Boolean).length;return Math.max(1,Math.round(w/220))}
+
+/* ------------------------------------------------------------------
+   GitHub API
+------------------------------------------------------------------ */
+function api(path,opts){
+  opts=opts||{};
+  var headers={'Authorization':'Bearer '+token,'Accept':opts.accept||'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  if(opts.body)headers['Content-Type']='application/json';
+  return fetch('https://api.github.com'+path,{method:opts.method||'GET',headers:headers,body:opts.body?JSON.stringify(opts.body):undefined,cache:'no-store'})
+    .then(function(r){
+      if(opts.allow404&&r.status===404)return null;
+      if(!r.ok)return r.json().catch(function(){return{}}).then(function(j){
+        var msg=j.message||('HTTP '+r.status);
+        if(r.status===401)msg='Your token is invalid or expired. Log out and sign in with a new one.';
+        else if(r.status===403||r.status===404&&opts.method)msg='GitHub refused the request ('+msg+'). Check that the token has Contents: Read and write on this repository.';
+        throw new Error(msg);
+      });
+      return opts.accept&&opts.accept.indexOf('raw')>=0?r.text():r.json();
+    });
+}
+function repoPath(p){return '/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo)+p}
+function readFile(path){
+  return api(repoPath('/contents/'+path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(cfg.branch)),{accept:'application/vnd.github.raw+json',allow404:true});
+}
+// Writes and deletes several files in one commit. files: {path: string content | null (delete)}
+function commit(files,message){
+  var ref,base;
+  return api(repoPath('/git/ref/heads/'+cfg.branch.split('/').map(encodeURIComponent).join('/'))).then(function(r){
+    ref=r.object.sha;return api(repoPath('/git/commits/'+ref));
+  }).then(function(c){
+    base=c.tree.sha;
+    var tree=Object.keys(files).map(function(p){
+      return files[p]===null?{path:p,mode:'100644',type:'blob',sha:null}:{path:p,mode:'100644',type:'blob',content:files[p]};
+    });
+    return api(repoPath('/git/trees'),{method:'POST',body:{base_tree:base,tree:tree}});
+  }).then(function(t){
+    return api(repoPath('/git/commits'),{method:'POST',body:{message:message,tree:t.sha,parents:[ref]}});
+  }).then(function(c){
+    return api(repoPath('/git/refs/heads/'+cfg.branch.split('/').map(encodeURIComponent).join('/')),{method:'PATCH',body:{sha:c.sha}});
+  });
+}
+function uploadImage(file){
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onload=function(){res(fr.result.split(',')[1])};fr.onerror=function(){rej(new Error('Could not read the file'))};
+    fr.readAsDataURL(file);
+  }).then(function(b64){
+    var ext=(file.name.match(/\.([a-z0-9]+)$/i)||[,'jpg'])[1].toLowerCase();
+    var name=today()+'-'+(slugify(file.name.replace(/\.[^.]+$/,''))||'image')+'-'+Date.now().toString(36)+'.'+ext;
+    var path='blog/images/'+name;
+    return api(repoPath('/contents/'+path),{method:'PUT',body:{message:'Upload blog image '+name,content:b64,branch:cfg.branch}}).then(function(){
+      var rel='images/'+name;localImages[rel]=URL.createObjectURL(file);return rel;
+    });
+  });
+}
+
+/* ------------------------------------------------------------------
+   Page builders
+------------------------------------------------------------------ */
+function coverSrc(cover,prefix){return isAbs(cover)?cover:prefix+cover}
+function postHtml(tpl,p,content){
+  var url=siteUrl()+'blog/'+p.slug+'/';
+  var img=p.cover?(isAbs(p.cover)?p.cover:siteUrl()+'blog/'+p.cover):'';
+  var ld={'@context':'https://schema.org','@type':'BlogPosting',headline:p.title,description:p.description,datePublished:p.date,dateModified:p.updated||p.date,
+    mainEntityOfPage:url,author:{'@type':'Organization',name:'JobsFor15YearOlds'},publisher:{'@type':'Organization',name:'JobsFor15YearOlds'}};
+  if(img)ld.image=img;
+  return fill(tpl,{
+    TITLE:esc(p.title),DESCRIPTION:esc(p.description),URL:esc(url),SLUG:esc(p.slug),
+    CATEGORY:esc(p.category),DATE:esc(p.date),DATE_HUMAN:esc(human(p.date)),READ_MINS:String(p.readMins),
+    OG_IMAGE:img?'<meta property="og:image" content="'+esc(img)+'">':'',
+    JSONLD:JSON.stringify(ld).replace(/</g,'\\u003c'),
+    COVER:p.cover?'  <figure class="article-cover"><img src="'+esc(coverSrc(p.cover,'../'))+'" alt="'+esc(p.coverAlt||p.title)+'"></figure>':'',
+    CONTENT:md(content,'../')
+  });
+}
+function cardHtml(p){
+  var cover=p.cover?'<img src="'+esc(coverSrc(p.cover,''))+'" alt="'+esc(p.coverAlt||'')+'" loading="lazy">':'15';
+  return '<a class="post-card" href="'+esc(p.slug)+'/" data-date="'+esc(p.date)+'" data-cat="'+esc(p.category)+'"'+(p.date>today()?' hidden':'')+'>'+
+    '<div class="cover">'+cover+'</div><div class="body"><h2>'+esc(p.title)+'</h2><p>'+esc(p.description)+'</p>'+
+    '<div class="meta"><span class="tag">'+esc(p.category)+'</span><time datetime="'+esc(p.date)+'">'+esc(human(p.date))+'</time><span>· '+p.readMins+' min read</span></div></div></a>';
+}
+function indexHtml(html,list){
+  var a='<!-- posts:start -->',b='<!-- posts:end -->',s=html.indexOf(a),e=html.indexOf(b);
+  if(s<0||e<0)throw new Error('blog/index.html is missing the <!-- posts:start --> / <!-- posts:end --> markers.');
+  return html.slice(0,s+a.length)+'\n'+list.map(cardHtml).join('\n')+'\n'+html.slice(e);
+}
+function sitemap(list){
+  var base=siteUrl(),t=today();
+  var urls=[{loc:base,mod:t},{loc:base+'blog/',mod:t}].concat(list.filter(function(p){return p.date<=t}).map(function(p){return{loc:base+'blog/'+p.slug+'/',mod:p.updated||p.date}}));
+  return '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+
+    urls.map(function(u){return '  <url><loc>'+esc(u.loc)+'</loc><lastmod>'+u.mod+'</lastmod></url>'}).join('\n')+'\n</urlset>\n';
+}
+function sortPosts(list){return list.sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.updated||'').localeCompare(a.updated||'')})}
+
+/* ------------------------------------------------------------------
+   UI: sidebar
+------------------------------------------------------------------ */
+function renderSide(){
+  var t=today(),live=posts.filter(function(p){return p.date<=t}),sched=posts.length-live.length;
+  var hasToday=posts.some(function(p){return p.date===t}),hasTomorrow=posts.some(function(p){return p.date===addDays(t,1)});
+  var dates={};live.forEach(function(p){dates[p.date]=1});
+  var streak=0,d=dates[t]?t:addDays(t,-1);while(dates[d]){streak++;d=addDays(d,-1)}
+  $('s-live').textContent=live.length;$('s-sched').textContent=sched;$('s-streak').textContent=streak;
+  var box=$('today');
+  box.className='today '+(hasToday?'ok':'todo');
+  box.innerHTML=hasToday?'<b>✓ Today\'s post is live</b><small>'+(hasTomorrow?'Tomorrow is scheduled too. Nice!':'Want to get ahead? Schedule tomorrow\'s post.')+'</small>'
+    :'<b>No post today yet</b><small>Write one and hit Publish to keep your streak going.</small>';
+  var q=$('list-search').value.trim().toLowerCase();
+  var list=posts.filter(function(p){return !q||(p.title+' '+p.category).toLowerCase().indexOf(q)>=0});
+  $('list').innerHTML=list.length?list.map(function(p){
+    var s=p.date>t;
+    return '<li><button type="button" data-slug="'+esc(p.slug)+'" aria-current="'+(p.slug===editing)+'"><span class="t">'+esc(p.title)+'</span>'+
+      '<span class="m"><span class="badge '+(s?'sched':'live')+'">'+(s?'Scheduled':'Live')+'</span>'+esc(human(p.date))+'</span></button></li>';
+  }).join(''):'<li class="muted" style="padding:10px">'+(posts.length?'No matches.':'No posts yet. Write your first one!')+'</li>';
+  var cats=CATS.slice();posts.forEach(function(p){if(p.category&&cats.indexOf(p.category)<0)cats.push(p.category)});
+  $('cat-list').innerHTML=cats.map(function(c){return '<option value="'+esc(c)+'">'}).join('');
+}
+
+/* ------------------------------------------------------------------
+   UI: editor
+------------------------------------------------------------------ */
+var F={title:$('f-title'),slug:$('f-slug'),category:$('f-category'),description:$('f-desc'),date:$('f-date'),cover:$('f-cover'),coverAlt:$('f-coveralt'),content:$('f-content')};
+var slugTouched=false;
+function formData(){var o={};Object.keys(F).forEach(function(k){o[k]=F[k].value});o.editing=editing;return o}
+function setForm(o){Object.keys(F).forEach(function(k){F[k].value=o[k]||''});slugTouched=!!o.slug&&o.slug!==slugify(o.title||'')}
+function dirty(){var a=formData(),b=loaded||{};return Object.keys(F).some(function(k){return (a[k]||'')!==(b[k]||'')})}
+function snapshot(){loaded=formData()}
+function status(msg,kind){var s=$('status');s.hidden=!msg;s.className='status '+(kind||'info');s.innerHTML=msg||''}
+function busy(on){['publish-btn','delete-btn','reset-btn','new-btn'].forEach(function(id){$(id).disabled=on})}
+
+function refreshEditor(){
+  var d=formData(),t=today();
+  $('slug-preview').textContent=d.slug||slugify(d.title)||'your-post';
+  $('c-title').textContent=d.title.length+' / 60 ideal';$('c-title').className='counter'+(d.title.length>65?' warn':'');
+  $('c-desc').textContent=d.description.length+' / 160';$('c-desc').className='counter'+(d.description.length&&(d.description.length<70||d.description.length>165)?' warn':'');
+  var words=d.content.split(/\s+/).filter(Boolean).length;
+  $('wordcount').textContent=words+' words · '+readMins(d.content)+' min read';
+  var label=d.date>t?'Schedule for '+human(d.date):(editing?'Update post':'Publish now');
+  $('publish-btn').textContent=label;
+  $('ed-title').textContent=editing?'Editing: '+(posts.filter(function(p){return p.slug===editing})[0]||{}).title:'New post';
+  $('delete-btn').hidden=!editing;
+  var lp=editing&&posts.filter(function(p){return p.slug===editing})[0];
+  $('view-live').hidden=!(lp&&lp.date<=t);if(lp)$('view-live').href='../blog/'+lp.slug+'/';
+  var th=$('cover-thumb');
+  if(d.cover){th.src=localImages[d.cover]||coverSrc(d.cover,'../blog/');th.hidden=false}else th.hidden=true;
+  if(!$('preview').hidden)renderPreview();
+}
+function renderPreview(){
+  var d=formData();
+  var html=md(d.content,'../blog/').replace(/src="\.\.\/blog\/(images\/[^"]+)"/g,function(m,p){return localImages[p]?'src="'+localImages[p]+'"':m});
+  $('preview').innerHTML='<h1 class="pt">'+esc(d.title||'Untitled post')+'</h1>'+(d.description?'<p class="muted">'+esc(d.description)+'</p>':'')+
+    '<div class="prose">'+(html||'<p class="ph">Nothing to preview yet.</p>')+'</div>';
+}
+function newPost(){
+  editing=null;
+  setForm({date:nextOpenDay(),category:'Job Tips'});
+  snapshot();refreshEditor();renderSide();status('');
+}
+function nextOpenDay(){var t=today(),d=t;var used={};posts.forEach(function(p){used[p.date]=1});while(used[d])d=addDays(d,1);return d}
+function openPost(slug){
+  var p=posts.filter(function(x){return x.slug===slug})[0];if(!p)return;
+  status('Loading post...');busy(true);
+  readFile('blog/posts/'+slug+'.md').then(function(text){
+    editing=slug;
+    setForm({title:p.title,slug:p.slug,category:p.category,description:p.description,date:p.date,cover:p.cover,coverAlt:p.coverAlt,content:text||''});
+    snapshot();refreshEditor();renderSide();status(text==null?'Could not find this post\'s source file, so the content box is empty.':'' ,text==null?'bad':'info');
+  }).catch(function(e){status(esc(e.message),'bad')}).then(function(){busy(false)});
+}
+function confirmLeave(){return !dirty()||confirm('You have unsaved changes. Discard them?')}
+
+/* Toolbar */
+function wrap(before,after,placeholder){
+  var ta=F.content,s=ta.selectionStart,e=ta.selectionEnd,sel=ta.value.slice(s,e)||placeholder;
+  ta.setRangeText(before+sel+after,s,e,'select');
+  ta.selectionStart=s+before.length;ta.selectionEnd=s+before.length+sel.length;ta.focus();ta.dispatchEvent(new Event('input'));
+}
+function linePrefix(fn){
+  var ta=F.content,v=ta.value,s=v.lastIndexOf('\n',ta.selectionStart-1)+1,e=v.indexOf('\n',ta.selectionEnd);if(e<0)e=v.length;
+  var block=v.slice(s,e).split('\n').map(fn).join('\n');
+  ta.setRangeText(block,s,e,'end');ta.focus();ta.dispatchEvent(new Event('input'));
+}
+function insertBlock(text){
+  var ta=F.content,s=ta.selectionStart,v=ta.value,pre=s&&v[s-1]!=='\n'?'\n\n':(s&&v[s-2]!=='\n'?'\n':'');
+  ta.setRangeText(pre+text+'\n\n',s,ta.selectionEnd,'end');ta.focus();ta.dispatchEvent(new Event('input'));
+}
+var pickTarget=null;
+var actions={
+  h2:function(){linePrefix(function(l){return '## '+l.replace(/^#+\s*/,'')})},
+  h3:function(){linePrefix(function(l){return '### '+l.replace(/^#+\s*/,'')})},
+  b:function(){wrap('**','**','bold text')},
+  i:function(){wrap('*','*','italic text')},
+  link:function(){var u=prompt('Link address (https://...)','https://');if(u)wrap('[','](' + u.trim() + ')','link text')},
+  ul:function(){linePrefix(function(l){return '- '+l.replace(/^\s*[-*+]\s+/,'')})},
+  ol:function(){var n=0;linePrefix(function(l){return (++n)+'. '+l.replace(/^\s*\d+[.)]\s+/,'')})},
+  quote:function(){linePrefix(function(l){return '> '+l.replace(/^>\s?/,'')})},
+  hr:function(){insertBlock('---')},
+  table:function(){insertBlock('| Job | Typical pay |\n|---|---|\n| Babysitter | $10 to $15/hr |\n| Lifeguard | $12 to $16/hr |')},
+  img:function(){pickTarget='content';$('file-input').click()}
+};
+document.querySelector('.toolbar').addEventListener('click',function(e){var b=e.target.closest('[data-md]');if(b)actions[b.getAttribute('data-md')]()});
+F.content.addEventListener('keydown',function(e){
+  if(!(e.ctrlKey||e.metaKey))return;
+  var k=e.key.toLowerCase();if(k==='b'||k==='i'||k==='k'){e.preventDefault();actions[k==='k'?'link':k]()}
+});
+$('cover-upload').addEventListener('click',function(){pickTarget='cover';$('file-input').click()});
+$('file-input').addEventListener('change',function(){
+  var file=this.files[0],target=pickTarget;this.value='';if(!file)return;
+  if(file.size>5*1024*1024){status('That image is over 5 MB. Please resize or compress it first (under 500 KB is ideal for page speed).','bad');return}
+  status('Uploading '+esc(file.name)+'...');
+  uploadImage(file).then(function(rel){
+    if(target==='cover'){F.cover.value=rel;if(!F.coverAlt.value)F.coverAlt.value=F.title.value}
+    else{var alt=prompt('Describe the image (for Google and screen readers):',F.title.value)||'';insertBlock('!['+alt.replace(/[\[\]]/g,'')+']('+rel+')')}
+    refreshEditor();saveDraft();
+    status('Image uploaded.'+(file.size>800*1024?' Tip: it is fairly large; smaller images load faster.':''),'ok');
+  }).catch(function(e){status(esc(e.message),'bad')});
+});
+
+/* Tabs */
+document.querySelectorAll('[data-tab]').forEach(function(t){t.addEventListener('click',function(){
+  var pv=t.getAttribute('data-tab')==='preview';
+  document.querySelectorAll('[data-tab]').forEach(function(x){x.setAttribute('aria-selected',x===t)});
+  $('write-pane').hidden=pv;$('preview').hidden=!pv;if(pv)renderPreview();
+})});
+
+/* Form events */
+var draftTimer;
+function saveDraft(){clearTimeout(draftTimer);draftTimer=setTimeout(function(){if(dirty())save(DRAFT_KEY,formData());else drop(DRAFT_KEY)},400)}
+F.title.addEventListener('input',function(){if(!slugTouched)F.slug.value=slugify(F.title.value)});
+F.slug.addEventListener('input',function(){slugTouched=true});
+F.slug.addEventListener('blur',function(){F.slug.value=slugify(F.slug.value);refreshEditor()});
+Object.keys(F).forEach(function(k){F[k].addEventListener('input',function(){refreshEditor();saveDraft()})});
+window.addEventListener('beforeunload',function(e){if(dirty()){e.preventDefault();e.returnValue=''}});
+
+$('list').addEventListener('click',function(e){var b=e.target.closest('[data-slug]');if(b&&b.getAttribute('data-slug')!==editing&&confirmLeave())openPost(b.getAttribute('data-slug'))});
+$('list-search').addEventListener('input',renderSide);
+$('new-btn').addEventListener('click',function(){if(confirmLeave()){drop(DRAFT_KEY);newPost()}});
+$('reset-btn').addEventListener('click',function(){
+  if(!dirty()||!confirm('Discard your unsaved changes?'))return;
+  drop(DRAFT_KEY);setForm(loaded);refreshEditor();status('');
+});
+
+/* ------------------------------------------------------------------
+   Publish / delete / rebuild
+------------------------------------------------------------------ */
+function ensureSite(){
+  if(siteUrl())return true;
+  alert('Please set your live site address in Settings first (for example https://www.yoursite.com/).');openSettings();return false;
+}
+function fetchShared(){
+  return Promise.all([readFile('blog/posts.json'),readFile('blog/_template.html'),readFile('blog/index.html')]).then(function(r){
+    if(!r[1])throw new Error('blog/_template.html was not found on branch "'+cfg.branch+'".');
+    if(!r[2])throw new Error('blog/index.html was not found on branch "'+cfg.branch+'".');
+    return{posts:r[0]?JSON.parse(r[0]):[],tpl:r[1],index:r[2]};
+  });
+}
+$('publish-btn').addEventListener('click',function(){
+  var d=formData();
+  d.title=d.title.trim();d.slug=slugify(d.slug||d.title);d.category=d.category.trim()||'Job Tips';d.description=d.description.trim().replace(/\s+/g,' ');
+  var problems=[];
+  if(!d.title)problems.push('a title');if(!d.slug)problems.push('a URL slug');if(!d.description)problems.push('a meta description');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d.date))problems.push('a publish date');if(d.content.trim().split(/\s+/).length<50)problems.push('at least 50 words of content');
+  if(problems.length){status('Please add '+problems.join(', ')+'.','bad');return}
+  if(!ensureSite())return;
+  var wasEditing=editing,now=today();
+  busy(true);status('Publishing...');
+  fetchShared().then(function(s){
+    var list=s.posts,old=wasEditing&&list.filter(function(p){return p.slug===wasEditing})[0];
+    if(d.slug!==wasEditing&&list.some(function(p){return p.slug===d.slug}))throw new Error('Another post already uses the slug "'+d.slug+'". Please pick a different one.');
+    var meta={slug:d.slug,title:d.title,description:d.description,category:d.category,date:d.date,updated:now,
+      cover:d.cover.trim(),coverAlt:d.coverAlt.trim(),readMins:readMins(d.content)};
+    if(old&&old.created)meta.created=old.created;else meta.created=now;
+    list=sortPosts(list.filter(function(p){return p.slug!==wasEditing&&p.slug!==d.slug}).concat([meta]));
+    var files={};
+    files['blog/'+d.slug+'/index.html']=postHtml(s.tpl,meta,d.content);
+    files['blog/posts/'+d.slug+'.md']=d.content;
+    files['blog/posts.json']=JSON.stringify(list,null,2)+'\n';
+    files['blog/index.html']=indexHtml(s.index,list);
+    files['sitemap.xml']=sitemap(list);
+    if(wasEditing&&wasEditing!==d.slug){files['blog/'+wasEditing+'/index.html']=null;files['blog/posts/'+wasEditing+'.md']=null}
+    var verb=old?'Update':(d.date>now?'Schedule':'Publish');
+    return commit(files,verb+' blog post: '+d.title).then(function(){return{list:list,meta:meta,verb:verb}});
+  }).then(function(r){
+    posts=r.list;editing=r.meta.slug;F.slug.value=r.meta.slug;F.description.value=r.meta.description;F.category.value=r.meta.category;
+    drop(DRAFT_KEY);snapshot();renderSide();refreshEditor();
+    var link='<a href="../blog/'+esc(r.meta.slug)+'/" target="_blank" rel="noopener">'+esc(siteUrl()+'blog/'+r.meta.slug+'/')+'</a>';
+    status(r.meta.date>now
+      ?'✓ Scheduled. It will appear on the blog on '+esc(human(r.meta.date))+'. Its link will be '+link
+      :'✓ '+(r.verb==='Update'?'Updated':'Published')+'! Your site usually refreshes within 1 to 2 minutes: '+link,'ok');
+  }).catch(function(e){status('Not published: '+esc(e.message),'bad')}).then(function(){busy(false)});
+});
+
+$('delete-btn').addEventListener('click',function(){
+  var slug=editing,p=posts.filter(function(x){return x.slug===slug})[0];
+  if(!p||!confirm('Delete "'+p.title+'" permanently? Its page will stop working.'))return;
+  if(!ensureSite())return;
+  busy(true);status('Deleting...');
+  fetchShared().then(function(s){
+    var list=s.posts.filter(function(x){return x.slug!==slug});
+    var files={};
+    files['blog/'+slug+'/index.html']=null;
+    files['blog/posts/'+slug+'.md']=null;
+    files['blog/posts.json']=JSON.stringify(list,null,2)+'\n';
+    files['blog/index.html']=indexHtml(s.index,list);
+    files['sitemap.xml']=sitemap(list);
+    return commit(files,'Delete blog post: '+p.title).then(function(){return list});
+  }).then(function(list){
+    posts=list;drop(DRAFT_KEY);newPost();status('Post deleted.','ok');
+  }).catch(function(e){status('Not deleted: '+esc(e.message),'bad')}).then(function(){busy(false)});
+});
+
+function rebuildAll(){
+  if(!ensureSite())return;
+  if(!confirm('Rebuild every post page with the current template?'))return;
+  $('settings').close();busy(true);status('Rebuilding all posts...');
+  fetchShared().then(function(s){
+    var list=sortPosts(s.posts);
+    return Promise.all(list.map(function(p){return readFile('blog/posts/'+p.slug+'.md')})).then(function(texts){
+      var files={};
+      list.forEach(function(p,i){if(texts[i]!=null){p.readMins=readMins(texts[i]);files['blog/'+p.slug+'/index.html']=postHtml(s.tpl,p,texts[i])}});
+      files['blog/posts.json']=JSON.stringify(list,null,2)+'\n';
+      files['blog/index.html']=indexHtml(s.index,list);
+      files['sitemap.xml']=sitemap(list);
+      return commit(files,'Rebuild all blog pages').then(function(){return list});
+    });
+  }).then(function(list){posts=list;renderSide();status('✓ Rebuilt '+list.length+' post'+(list.length===1?'':'s')+'.','ok')})
+    .catch(function(e){status('Rebuild failed: '+esc(e.message),'bad')}).then(function(){busy(false)});
+}
+
+/* ------------------------------------------------------------------
+   Settings, login, startup
+------------------------------------------------------------------ */
+function openSettings(){$('s-branch').value=cfg.branch||'';$('s-site').value=cfg.siteUrl||'';$('settings').showModal()}
+$('settings-btn').addEventListener('click',openSettings);
+$('rebuild-btn').addEventListener('click',rebuildAll);
+$('settings').addEventListener('close',function(){
+  if($('settings').returnValue!=='save')return;
+  var b=$('s-branch').value.trim(),u=$('s-site').value.trim();
+  if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
+  var branchChanged=b&&b!==cfg.branch;
+  if(b)cfg.branch=b;cfg.siteUrl=u?u.replace(/\/?$/,'/'):'';save(CFG_KEY,cfg);
+  $('repo-label').textContent=cfg.owner+'/'+cfg.repo+' · '+cfg.branch;
+  if(branchChanged)loadPosts();
+});
+$('logout-btn').addEventListener('click',function(){
+  if(!confirmLeave())return;
+  drop(TOKEN_KEY);token=null;location.reload();
+});
+
+function storedToken(){try{return sessionStorage.getItem(TOKEN_KEY)||localStorage.getItem(TOKEN_KEY)}catch(e){return null}}
+function showLogin(err){
+  $('app').hidden=true;$('login').hidden=false;$('settings-btn').hidden=$('logout-btn').hidden=true;
+  $('l-owner').value=cfg.owner||DEFAULTS.owner;$('l-repo').value=cfg.repo||DEFAULTS.repo;
+  $('login-err').hidden=!err;$('login-err').textContent=err||'';
+}
+$('login-form').addEventListener('submit',function(e){
+  e.preventDefault();
+  token=$('l-token').value.trim();cfg.owner=$('l-owner').value.trim();cfg.repo=$('l-repo').value.trim();
+  $('login-submit').disabled=true;
+  connect().then(function(){
+    try{($('l-remember').checked?localStorage:sessionStorage).setItem(TOKEN_KEY,token)}catch(e){}
+    $('l-token').value='';
+  }).catch(function(err){showLogin(err.message)}).then(function(){$('login-submit').disabled=false});
+});
+
+function connect(){
+  return api(repoPath('')).then(function(r){
+    if(!r.permissions||!r.permissions.push)throw new Error('This token can read the repository but cannot write to it. Set Contents to "Read and write".');
+    if(!cfg.branch)cfg.branch=r.default_branch;
+    if(!cfg.siteUrl&&/^https?:$/.test(location.protocol)&&!/^(localhost|127\.)/.test(location.hostname))cfg.siteUrl=new URL('../',location.href).href;
+    save(CFG_KEY,cfg);
+    $('repo-label').textContent=cfg.owner+'/'+cfg.repo+' · '+cfg.branch;
+    $('login').hidden=true;$('app').hidden=false;$('settings-btn').hidden=$('logout-btn').hidden=false;
+    return loadPosts();
+  });
+}
+function loadPosts(){
+  return readFile('blog/posts.json').then(function(text){
+    posts=sortPosts(text?JSON.parse(text):[]);
+    var draft=load(DRAFT_KEY);
+    if(draft&&(draft.editing==null||posts.some(function(p){return p.slug===draft.editing}))){
+      editing=draft.editing;
+      var p=posts.filter(function(x){return x.slug===editing})[0];
+      if(p){
+        // compare against the saved version so "Discard changes" goes back to it
+        readFile('blog/posts/'+p.slug+'.md').then(function(t){
+          loaded={title:p.title,slug:p.slug,category:p.category,description:p.description,date:p.date,cover:p.cover,coverAlt:p.coverAlt,content:t||''};
+          refreshEditor();
+        });
+      }else loaded={};
+      setForm(draft);refreshEditor();renderSide();
+      status('Restored your unsaved draft from last time.','info');
+    }else newPost();
+  });
+}
+
+var t=storedToken();
+if(t){token=t;connect().catch(function(e){showLogin(e.message)})}else showLogin();
+})();
+</script>
+</body>
+</html>

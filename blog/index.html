@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blog: Tips for Teens Looking for Their First Job | JobsFor15YearOlds</title>
+<meta name="description" content="Daily guides for teens: first-job tips, interview help, pay and work laws, money advice, and ideas for earning at 15.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:title" content="JobsFor15YearOlds Blog">
+<meta property="og:description" content="Daily guides for teens: first-job tips, interview help, pay and work laws, money advice, and ideas for earning at 15.">
+<meta name="theme-color" content="#14213d">
+<link rel="stylesheet" href="blog.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a href="../" class="logo"><span class="logo-badge" aria-hidden="true">15</span>JobsFor15YearOlds</a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="../">Home</a></li>
+      <li><a href="../#jobs">Jobs</a></li>
+      <li><a href="../#laws">Laws</a></li>
+      <li><a href="./" aria-current="page">Blog</a></li>
+      <li><a href="../#get-hired" class="nav-cta">Get Hired</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="main">
+<section class="blog-hero">
+  <div class="wrap">
+    <span class="kicker">The Blog</span>
+    <h1>Tips for your <span class="hl">first job</span>, every day</h1>
+    <p>Practical guides for teens: finding work, acing interviews, knowing your rights, and making the most of your paycheck.</p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="blog-tools">
+    <div class="cats" id="cats" role="group" aria-label="Filter by category"></div>
+    <input class="search" id="search" type="search" placeholder="Search posts" aria-label="Search posts">
+  </div>
+
+  <div class="post-grid" id="posts">
+<!-- posts:start -->
+<!-- posts:end -->
+  </div>
+  <p class="empty" id="empty" hidden>No posts here yet. Check back tomorrow!</p>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>© <span id="yr">2026</span> JobsFor15YearOlds · <a href="../">Home</a></p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btn=document.querySelector('.menu-btn'),links=document.getElementById('nav-links');
+  btn.addEventListener('click',function(){var o=links.classList.toggle('open');btn.setAttribute('aria-expanded',o)});
+  document.getElementById('yr').textContent=new Date().getFullYear();
+
+  // Posts dated in the future stay hidden until their day arrives (scheduled posts)
+  var d=new Date(),today=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  var cards=[].slice.call(document.querySelectorAll('.post-card')),
+      live=cards.filter(function(c){return c.getAttribute('data-date')<=today}),
+      empty=document.getElementById('empty'),
+      search=document.getElementById('search'),catsEl=document.getElementById('cats'),cat='All';
+
+  var cats=['All'];
+  live.forEach(function(c){var k=c.getAttribute('data-cat');if(k&&cats.indexOf(k)<0)cats.push(k)});
+  if(cats.length>2){
+    cats.forEach(function(k){
+      var b=document.createElement('button');b.type='button';b.textContent=k;b.setAttribute('aria-pressed',k===cat);
+      b.addEventListener('click',function(){cat=k;[].forEach.call(catsEl.children,function(x){x.setAttribute('aria-pressed',x===b)});apply()});
+      catsEl.appendChild(b);
+    });
+  }
+  function apply(){
+    var q=search.value.trim().toLowerCase(),shown=0;
+    cards.forEach(function(c){
+      var ok=live.indexOf(c)>=0&&(cat==='All'||c.getAttribute('data-cat')===cat)&&(!q||c.textContent.toLowerCase().indexOf(q)>=0);
+      c.hidden=!ok;c.classList.toggle('featured',ok&&!shown&&cat==='All'&&!q);if(ok)shown++;
+    });
+    empty.hidden=shown>0;
+  }
+  search.addEventListener('input',apply);
+  apply();
+})();
+</script>
+</body>
+</html>

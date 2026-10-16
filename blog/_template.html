@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Blog post template used by the admin panel (/admin/) to build every post page.
+  Placeholders in double curly braces are filled in automatically. Edit the design
+  here; it applies to posts the next time they are published or re-saved.
+-->
+<title>{{TITLE}} | JobsFor15YearOlds</title>
+<meta name="description" content="{{DESCRIPTION}}">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="{{URL}}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{TITLE}}">
+<meta property="og:description" content="{{DESCRIPTION}}">
+<meta property="og:url" content="{{URL}}">
+{{OG_IMAGE}}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#14213d">
+<script type="application/ld+json">{{JSONLD}}</script>
+<link rel="stylesheet" href="../blog.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a href="../../" class="logo"><span class="logo-badge" aria-hidden="true">15</span>JobsFor15YearOlds</a>
+    <button class="menu-btn" aria-expanded="false" aria-controls="nav-links">Menu</button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="../../">Home</a></li>
+      <li><a href="../../#jobs">Jobs</a></li>
+      <li><a href="../../#laws">Laws</a></li>
+      <li><a href="../">Blog</a></li>
+      <li><a href="../../#get-hired" class="nav-cta">Get Hired</a></li>
+    </ul>
+  </div>
+</header>
+
+<main id="main">
+<header class="article-head">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="../../">Home</a> / <a href="../">Blog</a> / {{CATEGORY}}</nav>
+    <h1>{{TITLE}}</h1>
+    <p class="lead">{{DESCRIPTION}}</p>
+    <div class="meta"><span class="tag">{{CATEGORY}}</span><time datetime="{{DATE}}">{{DATE_HUMAN}}</time><span>· {{READ_MINS}} min read</span></div>
+  </div>
+</header>
+
+<article class="article">
+{{COVER}}
+  <div class="prose">
+{{CONTENT}}
+  </div>
+  <a class="back-link" href="../">← All blog posts</a>
+</article>
+
+<section class="more" id="more" hidden>
+  <h2>Keep reading</h2>
+  <div class="post-grid" id="more-grid"></div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>© <span id="yr">2026</span> JobsFor15YearOlds · <a href="../">Blog</a> · <a href="../../">Home</a></p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btn=document.querySelector('.menu-btn'),links=document.getElementById('nav-links');
+  btn.addEventListener('click',function(){var o=links.classList.toggle('open');btn.setAttribute('aria-expanded',o)});
+  document.getElementById('yr').textContent=new Date().getFullYear();
+
+  // "Keep reading": three latest published posts other than this one
+  var self='{{SLUG}}',d=new Date(),today=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  if(!window.fetch)return;
+  fetch('../posts.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(posts){
+    var list=posts.filter(function(p){return p.slug!==self&&p.date<=today}).slice(0,3);
+    if(!list.length)return;
+    document.getElementById('more-grid').innerHTML=list.map(function(p){
+      var cover=p.cover?'<img src="'+esc(/^(https?:)?\/\//.test(p.cover)?p.cover:'../'+p.cover)+'" alt="'+esc(p.coverAlt||'')+'" loading="lazy">':'15';
+      return '<a class="post-card" href="../'+esc(p.slug)+'/"><div class="cover">'+cover+'</div><div class="body"><h2>'+esc(p.title)+'</h2><div class="meta"><span class="tag">'+esc(p.category)+'</span><span>'+p.readMins+' min read</span></div></div></a>';
+    }).join('');
+    document.getElementById('more').hidden=false;
+  }).catch(function(){});
+})();
+</script>
+</body>
+</html>

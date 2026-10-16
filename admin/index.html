@@ -141,29 +141,18 @@ dialog form{padding:22px}
 <!-- ============ LOGIN ============ -->
 <section class="login card" id="login" hidden>
   <h1>Sign in to publish</h1>
-  <p class="muted">Posts are saved straight to your GitHub repository, so you sign in with a GitHub access token. Your site redeploys automatically after each publish.</p>
+  <p class="muted">Enter the admin password you set in <code>admin/config.php</code>.</p>
   <div class="err" id="login-err" hidden></div>
   <form id="login-form">
-    <div class="row">
-      <div class="field"><label for="l-owner">GitHub owner</label><input class="input" id="l-owner" required></div>
-      <div class="field"><label for="l-repo">Repository</label><input class="input" id="l-repo" required></div>
-    </div>
     <div class="field">
-      <label for="l-token">Access token</label>
-      <input class="input" id="l-token" type="password" autocomplete="off" required placeholder="github_pat_...">
+      <label for="l-pass">Password</label>
+      <input class="input" id="l-pass" type="password" autocomplete="current-password" required autofocus>
     </div>
-    <label class="check"><input type="checkbox" id="l-remember"> Keep me signed in on this device</label>
     <p style="margin-top:16px"><button class="btn btn-primary" type="submit" id="login-submit">Sign in</button></p>
   </form>
-  <details class="guide" open>
-    <summary>How to get a token (one time, 2 minutes)</summary>
-    <ol>
-      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → Fine-grained tokens → Generate new token</a>.</li>
-      <li>Name it <code>Blog admin</code> and pick an expiration (for example 1 year).</li>
-      <li>Under <b>Repository access</b>, choose <b>Only select repositories</b> and pick this site's repository.</li>
-      <li>Under <b>Permissions → Repository permissions</b>, set <b>Contents</b> to <b>Read and write</b>.</li>
-      <li>Click <b>Generate token</b>, copy it, and paste it above. Keep it private like a password.</li>
-    </ol>
+  <details class="guide">
+    <summary>Forgot your password?</summary>
+    <p>Open Hostinger → File Manager → <code>public_html/admin/config.php</code>, type a new password between the quotes, and save.</p>
   </details>
 </section>
 
@@ -277,7 +266,6 @@ Normal paragraphs are just text. Use **bold**, *italic* and [links](https://exam
 <dialog id="settings">
   <form method="dialog" id="settings-form">
     <h2>Settings</h2>
-    <div class="field"><label for="s-branch">Branch your site publishes from</label><input class="input" id="s-branch"></div>
     <div class="field"><label for="s-site">Live site address <span class="hint">(used for Google links and sitemap)</span></label><input class="input" id="s-site" placeholder="https://www.example.com/"></div>
     <p class="guide">Changed the post design in <code>blog/_template.html</code>? Rebuild every post page with it:</p>
     <p><button class="btn" type="button" id="rebuild-btn">Rebuild all posts</button></p>
@@ -295,12 +283,11 @@ Normal paragraphs are just text. Use **bold**, *italic* and [links](https://exam
 /* ------------------------------------------------------------------
    Config & state
 ------------------------------------------------------------------ */
-var DEFAULTS={owner:'shizaadsenseexpert',repo:'jobsfor15yearsold'};
 var CATS=['Job Tips','Interview Help','Resume Tips','Work Laws','Money & Pay','Summer Jobs','Online Jobs','Career Ideas'];
-var DRAFT_KEY='blogAdminDraft',CFG_KEY='blogAdminConfig',TOKEN_KEY='blogAdminToken';
+var DRAFT_KEY='blogAdminDraft',CFG_KEY='blogAdminConfig';
 
 var cfg=load(CFG_KEY)||{};
-var token=null;
+var csrf='';
 var posts=[];          // contents of blog/posts.json
 var editing=null;      // slug of the post being edited (null = new post)
 var loaded=null;       // snapshot of the form when loaded, to detect unsaved changes
@@ -394,58 +381,29 @@ function md(src,base){
 function readMins(text){var w=String(text).replace(/[#>*_`|\-\[\]()!]/g,' ').split(/\s+/).filter(Boolean).length;return Math.max(1,Math.round(w/220))}
 
 /* ------------------------------------------------------------------
-   GitHub API
+   Server API (admin/api.php)
 ------------------------------------------------------------------ */
-function api(path,opts){
+function api(action,opts){
   opts=opts||{};
-  var headers={'Authorization':'Bearer '+token,'Accept':opts.accept||'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
-  if(opts.body)headers['Content-Type']='application/json';
-  return fetch('https://api.github.com'+path,{method:opts.method||'GET',headers:headers,body:opts.body?JSON.stringify(opts.body):undefined,cache:'no-store'})
-    .then(function(r){
-      if(opts.allow404&&r.status===404)return null;
-      if(!r.ok)return r.json().catch(function(){return{}}).then(function(j){
-        var msg=j.message||('HTTP '+r.status);
-        if(r.status===401)msg='Your token is invalid or expired. Log out and sign in with a new one.';
-        else if(r.status===403||r.status===404&&opts.method)msg='GitHub refused the request ('+msg+'). Check that the token has Contents: Read and write on this repository.';
-        throw new Error(msg);
-      });
-      return opts.accept&&opts.accept.indexOf('raw')>=0?r.text():r.json();
+  var init={method:opts.body||opts.form?'POST':'GET',credentials:'same-origin',cache:'no-store',headers:{'X-CSRF-Token':csrf}};
+  if(opts.body){init.headers['Content-Type']='application/json';init.body=JSON.stringify(opts.body)}
+  if(opts.form)init.body=opts.form;
+  return fetch('api.php?action='+action+(opts.query||''),init).then(function(r){
+    return r.json().catch(function(){throw new Error('The server sent an unexpected reply (HTTP '+r.status+'). Make sure PHP is enabled on your hosting.')}).then(function(j){
+      if(r.status===401&&action!=='login'){showLogin(j.error);throw new Error(j.error)}
+      if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
+      return j;
     });
+  });
 }
-function repoPath(p){return '/repos/'+encodeURIComponent(cfg.owner)+'/'+encodeURIComponent(cfg.repo)+p}
 function readFile(path){
-  return api(repoPath('/contents/'+path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(cfg.branch)),{accept:'application/vnd.github.raw+json',allow404:true});
+  return api('read',{query:'&path='+encodeURIComponent(path)}).then(function(r){return r.exists?r.content:null});
 }
-// Writes and deletes several files in one commit. files: {path: string content | null (delete)}
-function commit(files,message){
-  var ref,base;
-  return api(repoPath('/git/ref/heads/'+cfg.branch.split('/').map(encodeURIComponent).join('/'))).then(function(r){
-    ref=r.object.sha;return api(repoPath('/git/commits/'+ref));
-  }).then(function(c){
-    base=c.tree.sha;
-    var tree=Object.keys(files).map(function(p){
-      return files[p]===null?{path:p,mode:'100644',type:'blob',sha:null}:{path:p,mode:'100644',type:'blob',content:files[p]};
-    });
-    return api(repoPath('/git/trees'),{method:'POST',body:{base_tree:base,tree:tree}});
-  }).then(function(t){
-    return api(repoPath('/git/commits'),{method:'POST',body:{message:message,tree:t.sha,parents:[ref]}});
-  }).then(function(c){
-    return api(repoPath('/git/refs/heads/'+cfg.branch.split('/').map(encodeURIComponent).join('/')),{method:'PATCH',body:{sha:c.sha}});
-  });
-}
+// Saves and deletes several files at once. files: {path: string content | null (delete)}
+function commit(files){return api('write',{body:{files:files}})}
 function uploadImage(file){
-  return new Promise(function(res,rej){
-    var fr=new FileReader();
-    fr.onload=function(){res(fr.result.split(',')[1])};fr.onerror=function(){rej(new Error('Could not read the file'))};
-    fr.readAsDataURL(file);
-  }).then(function(b64){
-    var ext=(file.name.match(/\.([a-z0-9]+)$/i)||[,'jpg'])[1].toLowerCase();
-    var name=today()+'-'+(slugify(file.name.replace(/\.[^.]+$/,''))||'image')+'-'+Date.now().toString(36)+'.'+ext;
-    var path='blog/images/'+name;
-    return api(repoPath('/contents/'+path),{method:'PUT',body:{message:'Upload blog image '+name,content:b64,branch:cfg.branch}}).then(function(){
-      var rel='images/'+name;localImages[rel]=URL.createObjectURL(file);return rel;
-    });
-  });
+  var fd=new FormData();fd.append('image',file);
+  return api('upload',{form:fd}).then(function(r){localImages[r.path]=URL.createObjectURL(file);return r.path});
 }
 
 /* ------------------------------------------------------------------
@@ -642,8 +600,8 @@ function ensureSite(){
 }
 function fetchShared(){
   return Promise.all([readFile('blog/posts.json'),readFile('blog/_template.html'),readFile('blog/index.html')]).then(function(r){
-    if(!r[1])throw new Error('blog/_template.html was not found on branch "'+cfg.branch+'".');
-    if(!r[2])throw new Error('blog/index.html was not found on branch "'+cfg.branch+'".');
+    if(!r[1])throw new Error('blog/_template.html is missing on your server. Upload it again.');
+    if(!r[2])throw new Error('blog/index.html is missing on your server. Upload it again.');
     return{posts:r[0]?JSON.parse(r[0]):[],tpl:r[1],index:r[2]};
   });
 }
@@ -671,15 +629,15 @@ $('publish-btn').addEventListener('click',function(){
     files['blog/index.html']=indexHtml(s.index,list);
     files['sitemap.xml']=sitemap(list);
     if(wasEditing&&wasEditing!==d.slug){files['blog/'+wasEditing+'/index.html']=null;files['blog/posts/'+wasEditing+'.md']=null}
-    var verb=old?'Update':(d.date>now?'Schedule':'Publish');
-    return commit(files,verb+' blog post: '+d.title).then(function(){return{list:list,meta:meta,verb:verb}});
+    var verb=old?'Update':'Publish';
+    return commit(files).then(function(){return{list:list,meta:meta,verb:verb}});
   }).then(function(r){
     posts=r.list;editing=r.meta.slug;F.slug.value=r.meta.slug;F.description.value=r.meta.description;F.category.value=r.meta.category;
     drop(DRAFT_KEY);snapshot();renderSide();refreshEditor();
     var link='<a href="../blog/'+esc(r.meta.slug)+'/" target="_blank" rel="noopener">'+esc(siteUrl()+'blog/'+r.meta.slug+'/')+'</a>';
     status(r.meta.date>now
       ?'✓ Scheduled. It will appear on the blog on '+esc(human(r.meta.date))+'. Its link will be '+link
-      :'✓ '+(r.verb==='Update'?'Updated':'Published')+'! Your site usually refreshes within 1 to 2 minutes: '+link,'ok');
+      :'✓ '+(r.verb==='Update'?'Updated':'Published')+'! It is live now: '+link,'ok');
   }).catch(function(e){status('Not published: '+esc(e.message),'bad')}).then(function(){busy(false)});
 });
 
@@ -696,7 +654,7 @@ $('delete-btn').addEventListener('click',function(){
     files['blog/posts.json']=JSON.stringify(list,null,2)+'\n';
     files['blog/index.html']=indexHtml(s.index,list);
     files['sitemap.xml']=sitemap(list);
-    return commit(files,'Delete blog post: '+p.title).then(function(){return list});
+    return commit(files).then(function(){return list});
   }).then(function(list){
     posts=list;drop(DRAFT_KEY);newPost();status('Post deleted.','ok');
   }).catch(function(e){status('Not deleted: '+esc(e.message),'bad')}).then(function(){busy(false)});
@@ -714,7 +672,7 @@ function rebuildAll(){
       files['blog/posts.json']=JSON.stringify(list,null,2)+'\n';
       files['blog/index.html']=indexHtml(s.index,list);
       files['sitemap.xml']=sitemap(list);
-      return commit(files,'Rebuild all blog pages').then(function(){return list});
+      return commit(files).then(function(){return list});
     });
   }).then(function(list){posts=list;renderSide();status('✓ Rebuilt '+list.length+' post'+(list.length===1?'':'s')+'.','ok')})
     .catch(function(e){status('Rebuild failed: '+esc(e.message),'bad')}).then(function(){busy(false)});
@@ -723,49 +681,38 @@ function rebuildAll(){
 /* ------------------------------------------------------------------
    Settings, login, startup
 ------------------------------------------------------------------ */
-function openSettings(){$('s-branch').value=cfg.branch||'';$('s-site').value=cfg.siteUrl||'';$('settings').showModal()}
+function openSettings(){$('s-site').value=cfg.siteUrl||'';$('settings').showModal()}
 $('settings-btn').addEventListener('click',openSettings);
 $('rebuild-btn').addEventListener('click',rebuildAll);
 $('settings').addEventListener('close',function(){
   if($('settings').returnValue!=='save')return;
-  var b=$('s-branch').value.trim(),u=$('s-site').value.trim();
+  var u=$('s-site').value.trim();
   if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
-  var branchChanged=b&&b!==cfg.branch;
-  if(b)cfg.branch=b;cfg.siteUrl=u?u.replace(/\/?$/,'/'):'';save(CFG_KEY,cfg);
-  $('repo-label').textContent=cfg.owner+'/'+cfg.repo+' · '+cfg.branch;
-  if(branchChanged)loadPosts();
+  cfg.siteUrl=u?u.replace(/\/?$/,'/'):'';save(CFG_KEY,cfg);
 });
 $('logout-btn').addEventListener('click',function(){
   if(!confirmLeave())return;
-  drop(TOKEN_KEY);token=null;location.reload();
+  api('logout',{body:{}}).catch(function(){}).then(function(){location.reload()});
 });
 
-function storedToken(){try{return sessionStorage.getItem(TOKEN_KEY)||localStorage.getItem(TOKEN_KEY)}catch(e){return null}}
 function showLogin(err){
   $('app').hidden=true;$('login').hidden=false;$('settings-btn').hidden=$('logout-btn').hidden=true;
-  $('l-owner').value=cfg.owner||DEFAULTS.owner;$('l-repo').value=cfg.repo||DEFAULTS.repo;
   $('login-err').hidden=!err;$('login-err').textContent=err||'';
+  $('l-pass').focus();
 }
 $('login-form').addEventListener('submit',function(e){
   e.preventDefault();
-  token=$('l-token').value.trim();cfg.owner=$('l-owner').value.trim();cfg.repo=$('l-repo').value.trim();
   $('login-submit').disabled=true;
-  connect().then(function(){
-    try{($('l-remember').checked?localStorage:sessionStorage).setItem(TOKEN_KEY,token)}catch(e){}
-    $('l-token').value='';
+  api('login',{body:{password:$('l-pass').value}}).then(function(r){
+    csrf=r.csrf;$('l-pass').value='';return start();
   }).catch(function(err){showLogin(err.message)}).then(function(){$('login-submit').disabled=false});
 });
 
-function connect(){
-  return api(repoPath('')).then(function(r){
-    if(!r.permissions||!r.permissions.push)throw new Error('This token can read the repository but cannot write to it. Set Contents to "Read and write".');
-    if(!cfg.branch)cfg.branch=r.default_branch;
-    if(!cfg.siteUrl&&/^https?:$/.test(location.protocol)&&!/^(localhost|127\.)/.test(location.hostname))cfg.siteUrl=new URL('../',location.href).href;
-    save(CFG_KEY,cfg);
-    $('repo-label').textContent=cfg.owner+'/'+cfg.repo+' · '+cfg.branch;
-    $('login').hidden=true;$('app').hidden=false;$('settings-btn').hidden=$('logout-btn').hidden=false;
-    return loadPosts();
-  });
+function start(){
+  if(!cfg.siteUrl&&/^https?:$/.test(location.protocol)&&!/^(localhost|127\.)/.test(location.hostname)){cfg.siteUrl=new URL('../',location.href).href;save(CFG_KEY,cfg)}
+  $('repo-label').textContent=location.hostname;
+  $('login').hidden=true;$('app').hidden=false;$('settings-btn').hidden=$('logout-btn').hidden=false;
+  return loadPosts();
 }
 function loadPosts(){
   return readFile('blog/posts.json').then(function(text){
@@ -787,8 +734,7 @@ function loadPosts(){
   });
 }
 
-var t=storedToken();
-if(t){token=t;connect().catch(function(e){showLogin(e.message)})}else showLogin();
+api('me').then(function(r){csrf=r.csrf;if(r.loggedIn)return start();showLogin()}).catch(function(e){showLogin(e.message)});
 })();
 </script>
 </body>
